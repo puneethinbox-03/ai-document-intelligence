@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 
-# Create FastAPI app instance
-app = FastAPI(
-    title="AI Document Intelligence Assistant",
-    version="1.0.0"
-)
+from app.api.documents import router as documents_router
 
-# Root endpoint
+
+app = FastAPI()
+
+
+app.include_router(documents_router)
+
+
 @app.get("/")
 def root():
     return {

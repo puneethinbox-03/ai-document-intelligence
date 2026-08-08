@@ -1,0 +1,174 @@
+AI Document Intelligence Assistant
+Phase 3 Progress Summary
+
+✅ Step 1: Created Upload Directory
+Created the backend upload storage directory:
+backend/
+└── uploads/
+This directory is used to store uploaded documents during the Phase 3 POC.
+Status: ✅ Done
+
+✅ Step 2: Installed File Upload Dependency
+Installed python-multipart, which is required by FastAPI to handle multipart/form-data file uploads.
+Command used:
+pip install python-multipart
+Then updated the backend dependencies:
+pip freeze > requirements.txt
+Status: ✅ Done
+
+✅ Step 3: Created Document Schema
+Created:
+backend/app/schemas/document.py
+Implemented the DocumentResponse schema:
+from pydantic import BaseModel
+class DocumentResponse(BaseModel):
+    document_id: str
+    filename: str
+    file_type: str
+    file_size: int
+    status: str
+This defines the response structure returned by the document upload API.
+Status: ✅ Done
+
+✅ Step 4: Implemented Document Service
+Created:
+backend/app/services/document_service.py
+The document service handles the core upload logic.
+Implemented:
+Filename validation
+File extension validation
+File size validation
+Unique document ID generation
+Upload directory creation
+Physical file storage
+Document metadata creation
+Metadata persistence
+Retrieve all documents
+Retrieve document by ID
+Supported file types:
+.pdf
+.docx
+.txt
+.csv
+.pptx
+.md
+.png
+.jpg
+.jpeg
+.zip
+Maximum file size:
+50 MB
+Status: ✅ Done
+
+✅ Step 5: Implemented Metadata Storage
+Created:
+backend/uploads/metadata.json
+The metadata contains information such as:
+{
+    "document_id": "e865b3dc-3691-4089-a0ed-87a54b6029a2",
+    "filename": "AI_Document_Intelligence_Assistant.txt",
+    "file_type": "txt",
+    "file_size": 10120,
+    "status": "uploaded"
+}
+The system now maintains metadata for uploaded documents separately from the physical files.
+Status: ✅ Done
+
+✅ Step 6: Implemented Upload API
+Created:
+backend/app/api/documents.py
+Implemented:
+POST /api/documents/upload
+The API accepts:
+multipart/form-data
+with:
+file
+The API calls:
+save_uploaded_file(file)
+and returns a DocumentResponse.
+Status: ✅ Done
+
+✅ Step 7: Implemented Document Listing API
+Implemented:
+GET /api/documents
+This API retrieves the uploaded document metadata.
+Tested using PowerShell:
+irm http://127.0.0.1:8000/api/documents
+Successfully returned:
+document_id : e865b3dc-3691-4089-a0ed-87a54b6029a2
+filename    : AI_Document_Intelligence_Assistant.txt
+file_type   : txt
+file_size   : 10120
+status      : uploaded
+Status: ✅ Done
+
+✅ Step 8: Implemented Document Retrieval by ID
+Implemented:
+GET /api/documents/{document_id}
+The service uses:
+get_document_by_id(document_id)
+to find the requested document.
+A valid document ID returns its metadata.
+An invalid document ID correctly returns:
+
+{
+    "detail": "Document not found"
+}
+
+Tested with:
+irm http://127.0.0.1:8000/api/documents/invalid-document-id
+Status: ✅ Done
+
+✅ Step 9: Tested Successful File Upload
+Started the backend using:
+cd C:\Users\punee\Projects\ai-document-intelligence\backend
+uvicorn app.main:app --reload
+Backend successfully started:
+Uvicorn running on http://127.0.0.1:8000
+Application startup complete.
+Used FastAPI Swagger UI:
+http://127.0.0.1:8000/docs
+Uploaded:
+AI_Document_Intelligence_Assistant.txt
+API returned:
+200 OK
+with document metadata.
+The physical file was created in:
+backend/uploads/
+Example:
+e865b3dc-3691-4089-a0ed-87a54b6029a2.txt
+Status: ✅ Done
+
+✅ Step 10: Tested Invalid File Type
+Tested an unsupported file:
+libxml2.dll
+The API correctly rejected it with:
+400 Bad Request
+Response:
+{
+    "detail": "Unsupported file type: .dll"
+}
+
+This confirms the file-extension validation is working correctly.
+Status: ✅ Done
+
+✅ Step 11: Verified Physical File Storage
+Confirmed that uploaded files are actually being stored:
+backend/uploads/
+Example:
+52090595-c831-4113-9e1a-ef1653c90f3f.txt
+e865b3dc-3691-4089-a0ed-87a54b6029a2.txt
+metadata.json
+Status: ✅ Done
+
+✅ Step 12: Verified Metadata Persistence
+Confirmed that:
+metadata.json
+is automatically updated after successful uploads.
+The metadata includes:
+document_id
+filename
+file_type
+file_size
+status
+Status: ✅ Done
