@@ -122,6 +122,26 @@ def get_document_by_id(
     return None
 
 
+def get_document_file_path(document_id: str) -> Path | None:
+    """
+    Find the physical uploaded file using its document ID.
+    """
+
+    documents = load_metadata()
+
+    for document in documents:
+        if document["document_id"] == document_id:
+
+            extension = get_file_extension(
+                document["filename"]
+            )
+
+            file_path = UPLOAD_DIR / f"{document_id}{extension}"
+
+            if file_path.exists():
+                return file_path
+
+    return None
 # ============================================================
 # Upload Service
 # ============================================================

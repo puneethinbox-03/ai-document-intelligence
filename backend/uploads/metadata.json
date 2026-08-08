@@ -5,5 +5,47 @@
         "file_type": "txt",
         "file_size": 10120,
         "status": "uploaded"
+    },
+    {
+        "document_id": "bc889053-12c7-4463-921a-d9ea0964819b",
+        "filename": "sample.txt",
+        "file_type": "txt",
+        "file_size": 344,
+        "status": "uploaded"
+    },
+    {
+        "document_id": "d84304d9-0f6c-43a7-b480-24c64e2d99c7",
+        "filename": "sample.md",
+        "file_type": "md",
+        "file_size": 455,
+        "status": "uploaded"
+    },
+    {
+        "document_id": "34d04453-88b1-4e33-bc00-1f9430128a69",
+        "filename": "sample.pdf",
+        "file_type": "pdf",
+        "file_size": 1717,
+        "status": "uploaded"
+    },
+    {
+        "document_id": "4d6c35c9-3104-46cb-b284-fd207e65feed",
+        "filename": "sample.docx",
+        "file_type": "docx",
+        "file_size": 35669,
+        "status": "uploaded"
+    },
+    {
+        "document_id": "8b61204d-bd6a-4619-afea-eaf309a54c78",
+        "filename": "customers-10000.csv",
+        "file_type": "csv",
+        "file_size": 1719951,
+        "status": "uploaded"
+    },
+    {
+        "document_id": "b03846f4-6300-44a0-bbe9-17a6c0959140",
+        "filename": "sample.pptx",
+        "file_type": "pptx",
+        "file_size": 29268,
+        "status": "uploaded"
     }
 ]

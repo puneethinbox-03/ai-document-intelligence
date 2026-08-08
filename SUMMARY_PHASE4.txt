@@ -1,0 +1,211 @@
+AI Document Intelligence Assistant
+Phase 4 Progress Summary
+
+✅ Step 1: Created Parser Directory
+Created the document parser directory:
+backend/
+└── app/
+    └── parsers/
+This directory contains all document parsing components for the Phase 4 POC.
+Status: ✅ Done
+
+✅ Step 2: Created Base Parser
+Created:
+backend/app/parsers/base_parser.py
+Implemented the common BaseParser interface using an abstract parse() method.
+This provides a common structure that all document parsers follow.
+Status: ✅ Done
+
+✅ Step 3: Created TXT Parser
+Created:
+backend/app/parsers/txt_parser.py
+Implemented text extraction for .txt files.
+The parser reads the file using UTF-8 encoding and handles Unicode decoding issues.
+Status: ✅ Done
+
+✅ Step 4: Created Markdown Parser
+Created:
+backend/app/parsers/md_parser.py
+Markdown files are handled using the same text-based parsing approach as TXT files.
+Status: ✅ Done
+
+✅ Step 5: Created PDF Parser
+Created:
+backend/app/parsers/pdf_parser.py
+Implemented PDF text extraction using:
+pypdf
+The parser extracts text from each PDF page and combines the extracted content.
+Status: ✅ Done
+
+✅ Step 6: Created DOCX Parser
+Created:
+backend/app/parsers/docx_parser.py
+Implemented DOCX text extraction using:
+python-docx
+The parser reads the document paragraphs and extracts their text.
+Status: ✅ Done
+
+✅ Step 7: Created CSV Parser
+Created:
+backend/app/parsers/csv_parser.py
+Implemented CSV text extraction using Python's CSV module.
+CSV rows are converted into readable text using: |
+as the column separator.
+Status: ✅ Done
+
+✅ Step 8: Created PPTX Parser
+Created:
+backend/app/parsers/pptx_parser.py
+Implemented PowerPoint text extraction using:
+python-pptx
+The parser extracts text from PowerPoint slides and shapes.
+Status: ✅ Done
+
+✅ Step 9: Created Parser Factory
+Created:
+backend/app/parsers/parser_factory.py
+Implemented ParserFactory to automatically select the correct parser based on the document extension.
+Supported mapping:
+.txt  → TXTParser
+.md   → TXTParser
+.pdf  → PDFParser
+.docx → DOCXParser
+.csv  → CSVParser
+.pptx → PPTXParser
+This keeps parser selection separate from the API and follows the planned POC architecture.
+Status: ✅ Done
+
+✅ Step 10: Installed Document Parsing Dependencies
+Installed the required parsing libraries:
+pypdf
+python-docx
+python-pptx
+Command used:
+pip install pypdf python-docx python-pptx
+Then updated the backend dependencies:
+pip freeze > requirements.txt
+Status: ✅ Done
+
+✅ Step 11: Added Physical Document File Lookup
+Updated:
+backend/app/services/document_service.py
+Added functionality to locate the physical uploaded file using its:
+document_id
+The service identifies the original file extension and locates the corresponding file inside:
+backend/uploads/
+Status: ✅ Done
+
+✅ Step 12: Created Document Text Response Schema
+Updated:
+backend/app/schemas/document.py
+Added:
+class DocumentTextResponse(BaseModel):
+    document_id: str
+    filename: str
+    file_type: str
+    text: str
+This defines the response structure for extracted document text.
+Status: ✅ Done
+
+✅ Step 13: Created Extraction Service
+Created:
+backend/app/services/extraction_service.py
+The extraction service connects the document storage layer with the parser layer.
+The flow is:
+Document ID
+     ↓
+Find Document
+     ↓
+Find Physical File
+     ↓
+Parser Factory
+     ↓
+Select Parser
+     ↓
+Extract Text
+     ↓
+Return Text
+Status: ✅ Done
+
+✅ Step 14: Added Text Extraction API
+Updated:
+backend/app/api/documents.py
+Added the document text extraction endpoint:
+GET /api/documents/{document_id}/text
+This endpoint returns:
+document_id
+filename
+file_type
+text
+Status: ✅ Done
+
+✅ Step 15: Tested TXT Extraction
+Uploaded:
+sample.txt
+Successfully extracted:
+Hello, World!...
+Status: ✅ Passed
+
+✅ Step 16: Tested Markdown Extraction
+Uploaded:
+sample.md
+Successfully extracted Markdown content.
+Status: ✅ Passed
+
+✅ Step 17: Tested PDF Extraction
+Uploaded:
+sample.pdf
+Successfully extracted:
+Hello, World!...
+Status: ✅ Passed
+
+✅ Step 18: Tested DOCX Extraction
+Uploaded:
+sample.docx
+Successfully extracted:
+Hello, World!...
+Status: ✅ Passed
+
+✅ Step 19: Tested CSV Extraction
+Uploaded:
+customers-10000.csv
+Successfully extracted CSV content such as:
+Index | Customer Id | First Name | ..
+Status: ✅ Passed
+
+✅ Step 20: Tested PPTX Extraction
+Uploaded:
+sample.pptx
+Successfully extracted:
+Hello, World!...
+Status: ✅ Passed
+
+✅ Step 21: Tested Unsupported File Type
+Tested:
+sample.wpd
+The API correctly rejected the unsupported format:
+Unsupported file type: .wpd
+This confirms that unsupported file validation is working correctly.
+Status: ✅ Passed
+
+✅ Step 22: Tested Backend Startup
+Started the FastAPI backend using:
+uvicorn app.main:app --reload
+Backend successfully started with:
+Application startup complete.
+Status: ✅ Passed
+
+Phase 4 Supported Formats
+The following formats are implemented in the current POC:
+TXT  ✅
+MD   ✅
+PDF  ✅
+DOCX ✅
+CSV  ✅
+PPTX ✅
+
+The following are future POC functionality and are not implemented in Phase 4:
+PNG  → OCR
+JPG  → OCR
+JPEG → OCR
+ZIP  → ZIP extraction + recursive parsing
