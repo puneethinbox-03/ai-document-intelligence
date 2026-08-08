@@ -7,7 +7,7 @@ from app.parsers.md_parser import MDParser
 from app.parsers.pdf_parser import PDFParser
 from app.parsers.pptx_parser import PPTXParser
 from app.parsers.txt_parser import TXTParser
-
+from app.parsers.ocr_parser import OCRParser
 
 class ParserFactory:
     """
@@ -15,13 +15,17 @@ class ParserFactory:
     parser based on the document extension.
     """
 
+    
     _parsers = {
-        ".txt": TXTParser,
-        ".md": MDParser,
-        ".pdf": PDFParser,
-        ".docx": DOCXParser,
-        ".csv": CSVParser,
-        ".pptx": PPTXParser,
+    ".txt": TXTParser,
+    ".md": TXTParser,
+    ".pdf": PDFParser,
+    ".docx": DOCXParser,
+    ".csv": CSVParser,
+    ".pptx": PPTXParser,
+    ".png": OCRParser,
+    ".jpg": OCRParser,
+    ".jpeg": OCRParser,
     }
 
     @classmethod

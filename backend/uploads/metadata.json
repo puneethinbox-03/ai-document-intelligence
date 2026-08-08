@@ -47,5 +47,33 @@
         "file_type": "pptx",
         "file_size": 29268,
         "status": "uploaded"
+    },
+    {
+        "document_id": "cc362f8e-089b-40f7-923f-3f1fe4c7dd9f",
+        "filename": "web-braverangels.png",
+        "file_type": "png",
+        "file_size": 137695,
+        "status": "uploaded"
+    },
+    {
+        "document_id": "01db2b69-26b4-4faf-b4e1-1de3faa0deb0",
+        "filename": "sample.jpg",
+        "file_type": "jpg",
+        "file_size": 5196,
+        "status": "uploaded"
+    },
+    {
+        "document_id": "fea32f44-a026-4d4c-8dc1-ac8b872c11ed",
+        "filename": "sample.jpeg",
+        "file_type": "jpeg",
+        "file_size": 3798,
+        "status": "uploaded"
+    },
+    {
+        "document_id": "5d7b411f-3657-4ac0-b273-e7d245ecc7c6",
+        "filename": "web-braverangels.png",
+        "file_type": "png",
+        "file_size": 137695,
+        "status": "uploaded"
     }
 ]
