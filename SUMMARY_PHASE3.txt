@@ -172,3 +172,45 @@ file_type
 file_size
 status
 Status: ✅ Done
+
+(venv) PS C:\Users\punee\Projects\ai-document-intelligence\backend> cd C:\Users\punee\Projects\ai-document-intelligence
+(venv) PS C:\Users\punee\Projects\ai-document-intelligence> git status
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   backend/app/main.py
+        modified:   backend/requirements.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        SUMMARY_PHASE3.txt
+        backend/app/api/
+        backend/app/schemas/
+        backend/app/services/
+        backend/uploads/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+(venv) PS C:\Users\punee\Projects\ai-document-intelligence> git add .
+(venv) PS C:\Users\punee\Projects\ai-document-intelligence> git commit -m "Complete Phase 3 document upload module"
+[main 6771f20] Complete Phase 3 document upload module
+ 9 files changed, 1537 insertions(+), 7 deletions(-)
+ create mode 100644 SUMMARY_PHASE3.txt
+ create mode 100644 backend/app/api/documents.py
+ create mode 100644 backend/app/schemas/document.py
+ create mode 100644 backend/app/services/document_service.py
+ create mode 100644 backend/uploads/52090595-c831-4113-9e1a-ef1653c90f3f.txt
+ create mode 100644 backend/uploads/e865b3dc-3691-4089-a0ed-87a54b6029a2.txt
+ create mode 100644 backend/uploads/metadata.json
+(venv) PS C:\Users\punee\Projects\ai-document-intelligence> git push origin main
+Enumerating objects: 21, done.
+Counting objects: 100% (21/21), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (13/13), done.
+Writing objects: 100% (16/16), 7.96 KiB | 1.99 MiB/s, done.
+Total 16 (delta 3), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (3/3), completed with 1 local object.
+To https://github.com/puneethinbox-03/ai-document-intelligence.git
+   f3c8922..6771f20  main -> main
