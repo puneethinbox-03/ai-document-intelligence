@@ -75,5 +75,19 @@
         "file_type": "png",
         "file_size": 137695,
         "status": "uploaded"
+    },
+    {
+        "document_id": "5605815e-f5e6-43af-958d-8c8989bdc1b9",
+        "filename": "sample.pdf",
+        "file_type": "pdf",
+        "file_size": 1717,
+        "status": "uploaded"
+    },
+    {
+        "document_id": "83eb1df3-67b5-4758-82f8-b165767173b4",
+        "filename": "pdflatex-4-pages.pdf",
+        "file_type": "pdf",
+        "file_size": 24607,
+        "status": "uploaded"
     }
 ]

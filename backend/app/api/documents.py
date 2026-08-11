@@ -1,5 +1,5 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile
-
+from app.parsers.parser_factory import ParserFactory
 from app.schemas.document import (
     DocumentResponse,
     DocumentTextResponse,
@@ -151,4 +151,47 @@ def extract_document(
         raise HTTPException(
             status_code=500,
             detail=f"Document extraction failed: {str(exc)}",
+        )
+
+@router.get(
+    "/{document_id}/text",
+    response_model=DocumentTextResponse,
+)
+def get_document_text(
+    document_id: str,
+):
+    document = get_document_by_id(document_id)
+
+    if document is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found",
+        )
+
+    file_path = get_document_file_path(document_id)
+
+    if file_path is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Document file not found",
+        )
+
+    try:
+        parser = ParserFactory.get_parser(file_path)
+
+        raw_text = parser.parse(file_path)
+
+        processed_text = process_text(raw_text)
+
+        return {
+            "document_id": document["document_id"],
+            "filename": document["filename"],
+            "file_type": document["file_type"],
+            "text": processed_text,
+        }
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
         )
