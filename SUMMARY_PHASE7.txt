@@ -1,0 +1,227 @@
+AI Document Intelligence Assistant
+Phase — Chunking Progress Summary
+
+
+✅ Step 1: Created Chunking Directory
+Created the chunking service directory:
+backend/
+└── app/
+    └── services/
+        └── chunking/
+This directory contains the chunking logic for splitting extracted document text into smaller token-based chunks.
+Status: ✅ Done
+
+✅ Step 2: Created Chunk Model
+Created:
+backend/app/services/chunking/chunk_model.py
+Implemented the basic chunk structure containing:
+chunk_id
+document_id
+chunk_index
+text
+token_count
+These fields will later be useful for embeddings, vector storage, retrieval, and RAG.
+Status: ✅ Done
+
+✅ Step 3: Installed Tokenization Dependency
+Installed tiktoken for token-based chunking:
+pip install tiktoken
+Updated dependencies:
+pip freeze > requirements.txt
+Status: ✅ Done
+
+✅ Step 4: Configured Chunk Size and Overlap
+Configured the POC chunking parameters:
+chunk_size = 1000
+chunk_overlap = 150
+This means:
+Maximum chunk size: 1000 tokens
+Overlap between adjacent chunks: 150 tokens
+The configuration is suitable for the expected documents of approximately 35–40 pages.
+Status: ✅ Done
+
+✅ Step 5: Created Chunking Service
+Created:
+backend/app/services/chunking/chunking_service.py
+Implemented token-based text chunking using tiktoken.
+The service:
+Receives cleaned and normalized text.
+Tokenizes the text.
+Splits it into approximately 1000-token chunks.
+Maintains 150-token overlap.
+Generates chunk indexes.
+Calculates token counts.
+Returns chunk objects.
+Status: ✅ Done
+
+✅ Step 6: Integrated Cleaning and Normalization
+The complete processing pipeline is now:
+Document
+   ↓
+Parser / OCR
+   ↓
+Extracted Text
+   ↓
+Cleaning
+   ↓
+Normalization
+   ↓
+Chunking
+   ↓
+Chunks
+
+The chunking service is format-independent.
+It is not limited to PDF files.
+Status: ✅ Done
+
+✅ Step 7: Tested TXT
+Tested:
+sample.txt
+Result:
+Extracted: 344
+Chunks: 1
+Chunk 0: 66 tokens
+Status: ✅ Passed
+
+✅ Step 8: Tested Markdown
+Tested:
+sample.md
+Result:
+Extracted: 455
+Chunks: 1
+Chunk 0: 116 tokens
+Status: ✅ Passed
+
+✅ Step 9: Tested PDF
+Tested:
+pdflatex-4-pages.pdf
+Result:
+Extracted: 14477
+Chunks: 4
+Chunk 0: 1000 tokens
+Chunk 1: 1000 tokens
+Chunk 2: 1000 tokens
+Chunk 3: 674 tokens
+This confirms that the chunking service correctly handles a larger document and creates multiple chunks.
+Status: ✅ Passed
+
+✅ Step 10: Tested DOCX
+Tested:
+sample.docx
+Result:
+Extracted: 235
+Chunks: 1
+Chunk 0: 45 tokens
+Status: ✅ Passed
+
+✅ Step 11: Tested CSV
+Tested the CSV processing pipeline using:
+customers-10000.csv
+Pipeline:
+CSV
+ ↓
+CSVParser
+ ↓
+Cleaning
+ ↓
+Normalization
+ ↓
+Chunking
+Status: ✅ Passed
+
+✅ Step 12: Tested PPTX
+Tested:
+sample.pptx
+Result:
+Extracted: 135
+Chunks: 1
+Chunk 0: 24 tokens
+Status: ✅ Passed
+
+✅ Step 13: Tested PNG OCR
+Tested:
+web-braverangels.png
+Pipeline:
+
+PNG
+ ↓
+OCR
+ ↓
+Cleaning
+ ↓
+Normalization
+ ↓
+Chunking
+
+Result:
+Extracted: 21
+Chunks: 1
+Chunk 0: 6 tokens
+Status: ✅ Passed
+
+✅ Step 14: Tested JPG OCR
+Tested:
+sample.jpg
+Pipeline:
+
+JPG
+ ↓
+OCR
+ ↓
+Cleaning
+ ↓
+Normalization
+ ↓
+Chunking
+
+Result:
+Extracted: 31
+Chunks: 1
+Chunk 0: 7 tokens
+Status: ✅ Passed
+
+✅ Step 15: Tested Scanned PDF OCR
+Tested:
+spytm_Scanned.pdf
+Pipeline:
+
+Scanned PDF
+ ↓
+PDF → Images
+ ↓
+Tesseract OCR
+ ↓
+Cleaning
+ ↓
+Normalization
+ ↓
+Chunking
+
+Result:
+Extracted: 93
+Chunks: 1
+Chunk 0: 30 tokens
+Status: ✅ Passed
+
+✅ Step 16: Format Coverage Verified
+Chunking has now been validated across all supported formats:
+TXT             ✅
+Markdown        ✅
+PDF             ✅
+DOCX            ✅
+CSV             ✅
+PPTX            ✅
+PNG             ✅
+JPG             ✅
+Scanned PDF     ✅
+Important: Cleaning, normalization, and chunking are common services applied to extracted text from all formats.
+Status: ✅ Done
+
+✅ Step 17: Large-Document Chunking Verified
+The 4-page PDF generated:
+1000 tokens
+1000 tokens
+1000 tokens
+674 tokens
+This confirms that the service can split larger documents into multiple chunks according to the configured chunk size.
+Status: ✅ Done
