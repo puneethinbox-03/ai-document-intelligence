@@ -1,0 +1,229 @@
+AI Document Intelligence Assistant
+Phase ChromaDB Progress Summary
+
+✅ Step 1: Installed ChromaDB
+Added ChromaDB to:
+backend/requirements.txt
+ChromaDB is now available inside the Python virtual environment.
+Status: ✅ Done
+
+✅ Step 2: Created ChromaDB Client
+Created:
+backend/app/services/vectorstore/chroma_client.py
+Implemented a persistent ChromaDB client using:
+chromadb.PersistentClient(
+    path=str(CHROMA_PATH)
+)
+Storage location:
+backend/data/chroma/
+The client uses lazy initialization so the ChromaDB client is created only when required.
+Status: ✅ Done
+
+✅ Step 3: Created Persistent ChromaDB Storage
+ChromaDB automatically creates:
+backend/data/chroma/
+├── chroma.sqlite3
+└── <collection UUID>/
+Example current structure:
+backend/data/chroma/
+├── chroma.sqlite3
+└── d270c149-55af-454c-9b00-08980b39b8a9/
+This confirms that persistent storage is working.
+Status: ✅ Done
+
+✅ Step 4: Created ChromaDB Collection
+Created:
+backend/app/services/vectorstore/chroma_service.py
+Collection name:
+document_chunks
+Implemented:
+get_collection()
+The function uses:
+client.get_or_create_collection(
+    name=COLLECTION_NAME,
+    metadata={"hnsw:space": "cosine"}
+The collection was successfully verified:
+Collection: document_chunks
+Count: 0
+Metadata: {'hnsw:space': 'cosine'}
+Status: ✅ Done
+
+✅ Step 5: Implemented Chunk Storage
+Implemented:
+add_chunks()
+It stores:
+Chunk ID
+Chunk text
+Embedding
+Metadata
+Example:
+chunk_id
+    ↓
+document/chunk text
+    ↓
+1024-dimensional embedding
+    ↓
+metadata
+    ↓
+ChromaDB
+Input validation was also implemented to ensure all lists have the same length.
+Status: ✅ Done
+
+✅ Step 6: Implemented Chunk Retrieval
+Implemented:
+get_chunks()
+Supports:
+Get specific chunks
+Get all chunks
+Optionally return embeddings
+Embeddings are only returned when:
+include_embeddings=True
+This avoids unnecessarily retrieving large embedding vectors.
+Status: ✅ Done
+
+✅ Step 7: Implemented Vector Query
+Implemented:
+query_chunks()
+Supports:
+Query embedding
+Top-K results
+Metadata filtering
+Example:
+Query Embedding
+      ↓
+ChromaDB
+      ↓
+Similarity Search
+      ↓
+Top-K chunks
+Status: ✅ Done
+
+✅ Step 8: Implemented Application-Level Search Wrapper
+Implemented:
+search_chunks()
+This provides an application-level wrapper around the lower-level ChromaDB query function.
+It also handles an empty query embedding safely.
+Status: ✅ Done
+
+✅ Step 9: Implemented Chunk Deletion
+Implemented:
+delete_chunks()
+Allows vectors/chunks to be deleted using chunk IDs.
+This is required for document deletion and re-indexing workflows.
+Status: ✅ Done
+
+✅ Step 10: Implemented Chunk Count
+Implemented
+count_chunks()
+This allows the application/tests to verify the number of vectors stored in ChromaDB.
+Status: ✅ Done
+
+Testing
+✅ Step 11: ChromaDB Store Test
+Created:
+backend/tests/test_chroma_store.py
+Tested:
+Add chunks
+Retrieve chunks
+Verify chunk IDs
+Verify embeddings
+Verify 1024-dimensional embeddings
+Result:
+1 passed
+Status: ✅ Passed
+
+✅ Step 12: Vector Search Test
+Created:
+backend/tests/test_chroma_search.py
+Tested semantic search using real embeddings.
+Example indexed documents:
+Python
+SQL
+Basketball
+Search successfully returned:
+Python is a programming language used for software development.
+SQL is used to query and manage relational databases.
+Basketball is a popular sport played around the world.
+Result:
+1 passed
+Status: ✅ Passed
+
+✅ Step 13: Additional ChromaDB Tests
+Created and tested the following test modules:
+backend/tests/test_chroma_delete.py
+backend/tests/test_chroma_empty_search.py
+backend/tests/test_chroma_metadata_filter.py
+backend/tests/test_chroma_pipeline.py
+backend/tests/test_chroma_ranking.py
+backend/tests/test_chroma_real_search.py
+backend/tests/test_chroma_search.py
+backend/tests/test_chroma_store.py
+These cover:
+✓ Vector storage
+✓ Vector retrieval
+✓ Semantic search
+✓ Empty search handling
+✓ Metadata filtering
+✓ Ranking
+✓ Delete operations
+✓ Real embedding search
+✓ End-to-end chunk → embedding → ChromaDB pipeline
+Status: ✅ Implemented
+
+Embedding Dimension Issue Resolved
+Initially the test used:
+[1.0, 0.0, 0.0]
+
+which caused:
+Collection expecting embedding with dimension of 1024, got 3
+The test was corrected to use the actual embedding service:
+embeddings = embed_texts(texts)
+This generates the expected:
+1024-dimensional embeddings
+The corrected test passed successfully.
+Status: ✅ Resolved
+
+ChromaDB Persistence
+Verified that ChromaDB creates:
+backend/data/chroma/
+with:
+chroma.sqlite3
+collection data
+This confirms persistent vector storage is working.
+Status: ✅ Verified
+
+Git Configuration
+Updated:
+.gitignore
+Added:
+data/chroma/
+This ensures ChromaDB runtime files are not committed to Git.
+Verification:
+git check-ignore -v backend/data/chroma/chroma.sqlite3
+Result:
+.gitignore:223:backend/data/chroma/
+backend/data/chroma/chroma.sqlite3
+Therefore ChromaDB storage is correctly ignored.
+Status: ✅ Done
+
+Important Decision — Should backend/data/chroma/ Be Kept?
+YES.
+Keep:
+backend/data/chroma/
+locally.
+Do NOT commit its contents to Git.
+Reason:
+
+Application
+    ↓
+ChromaDB
+    ↓
+backend/data/chroma/
+    ↓
+Persistent local vector database
+The directory is required for the application to persist vectors between runs.
+Git should track the code that creates/uses ChromaDB, not the generated database itself.
+Therefore:
+backend/data/chroma/       → Keep locally
+chroma.sqlite3             → Do NOT commit
+collection UUID directory  → Do NOT commit
