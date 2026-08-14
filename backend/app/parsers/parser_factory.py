@@ -26,7 +26,7 @@ class ParserFactory:
     ".png": OCRParser,
     ".jpg": OCRParser,
     ".jpeg": OCRParser,
-    }
+}
 
     @classmethod
     def get_parser(cls, file_path: Path) -> BaseParser:
