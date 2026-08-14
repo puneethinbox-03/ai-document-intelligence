@@ -1,5 +1,5 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile
-from app.parsers.parser_factory import ParserFactory
+
 from app.schemas.document import (
     DocumentResponse,
     DocumentTextResponse,
@@ -10,10 +10,15 @@ from app.services.document_service import (
     get_document_by_id,
     get_document_file_path,
     save_uploaded_file,
+    update_document_status,
 )
 
 from app.services.extraction_service import (
     extract_document_text,
+)
+
+from app.services.indexing_service import (
+    index_document,
 )
 
 
@@ -34,15 +39,113 @@ router = APIRouter(
 async def upload_document(
     file: UploadFile = File(...),
 ):
+    """
+    Upload, index, and store a document.
+
+    Flow:
+        Upload
+          ↓
+        Save file
+          ↓
+        Processing
+          ↓
+        Extract text
+          ↓
+        Chunk text
+          ↓
+        Generate embeddings
+          ↓
+        Store in ChromaDB
+          ↓
+        Indexed
+    """
+
+    document = None
+
     try:
+        # ----------------------------------------------------
+        # 1. Save uploaded file
+        # ----------------------------------------------------
+
         document = await save_uploaded_file(file)
 
-        return document
+        document_id = document["document_id"]
+
+        # ----------------------------------------------------
+        # 2. Mark document as processing
+        # ----------------------------------------------------
+
+        update_document_status(
+            document_id=document_id,
+            status="processing",
+        )
+
+        # ----------------------------------------------------
+        # 3. Find physical uploaded file
+        # ----------------------------------------------------
+
+        file_path = get_document_file_path(
+            document_id
+        )
+
+        if file_path is None:
+            raise ValueError(
+                "Uploaded file could not be located"
+            )
+
+        # ----------------------------------------------------
+        # 4. Index document
+        # ----------------------------------------------------
+
+        index_document(
+            file_path=file_path,
+            document_id=document_id,
+            filename=document["filename"],
+        )
+
+        # ----------------------------------------------------
+        # 5. Mark document as indexed
+        # ----------------------------------------------------
+
+        updated_document = update_document_status(
+            document_id=document_id,
+            status="indexed",
+        )
+
+        return updated_document or document
 
     except ValueError as exc:
+        # ----------------------------------------------------
+        # Validation / indexing error
+        # ----------------------------------------------------
+
+        if document is not None:
+            update_document_status(
+                document_id=document["document_id"],
+                status="failed",
+                error=str(exc),
+            )
+
         raise HTTPException(
             status_code=400,
             detail=str(exc),
+        )
+
+    except Exception as exc:
+        # ----------------------------------------------------
+        # Unexpected indexing error
+        # ----------------------------------------------------
+
+        if document is not None:
+            update_document_status(
+                document_id=document["document_id"],
+                status="failed",
+                error=str(exc),
+            )
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Document indexing failed: {str(exc)}",
         )
 
 
@@ -55,6 +158,10 @@ async def upload_document(
     response_model=list[DocumentResponse],
 )
 def list_documents():
+    """
+    Return all uploaded documents.
+    """
+
     return get_all_documents()
 
 
@@ -69,6 +176,10 @@ def list_documents():
 def get_document(
     document_id: str,
 ):
+    """
+    Return a document by its document ID.
+    """
+
     document = get_document_by_id(
         document_id
     )
@@ -93,6 +204,10 @@ def get_document(
 def extract_document(
     document_id: str,
 ):
+    """
+    Extract and return processed text for a document.
+    """
+
     # --------------------------------------------------------
     # 1. Find document metadata
     # --------------------------------------------------------
@@ -122,7 +237,7 @@ def extract_document(
         )
 
     # --------------------------------------------------------
-    # 3. Extract text
+    # 3. Extract and process text
     # --------------------------------------------------------
 
     try:
@@ -151,47 +266,4 @@ def extract_document(
         raise HTTPException(
             status_code=500,
             detail=f"Document extraction failed: {str(exc)}",
-        )
-
-@router.get(
-    "/{document_id}/text",
-    response_model=DocumentTextResponse,
-)
-def get_document_text(
-    document_id: str,
-):
-    document = get_document_by_id(document_id)
-
-    if document is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Document not found",
-        )
-
-    file_path = get_document_file_path(document_id)
-
-    if file_path is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Document file not found",
-        )
-
-    try:
-        parser = ParserFactory.get_parser(file_path)
-
-        raw_text = parser.parse(file_path)
-
-        processed_text = process_text(raw_text)
-
-        return {
-            "document_id": document["document_id"],
-            "filename": document["filename"],
-            "file_type": document["file_type"],
-            "text": processed_text,
-        }
-
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail=str(exc),
         )

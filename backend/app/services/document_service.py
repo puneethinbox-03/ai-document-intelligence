@@ -21,8 +21,7 @@ ALLOWED_EXTENSIONS = {
     ".md",
     ".png",
     ".jpg",
-    ".jpeg",
-    ".zip",
+    ".jpeg"
 }
 
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
@@ -145,6 +144,31 @@ def get_document_file_path(document_id: str) -> Path | None:
 # ============================================================
 # Upload Service
 # ============================================================
+def update_document_status(
+    document_id: str,
+    status: str,
+    error: str | None = None,
+) -> dict | None:
+    """
+    Update document processing status.
+    """
+
+    documents = load_metadata()
+
+    for document in documents:
+        if document["document_id"] == document_id:
+            document["status"] = status
+
+            if error:
+                document["error"] = error
+            else:
+                document.pop("error", None)
+
+            save_metadata(documents)
+
+            return document
+
+    return None
 
 async def save_uploaded_file(
     file: UploadFile,

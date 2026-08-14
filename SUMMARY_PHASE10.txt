@@ -1,0 +1,399 @@
+AI Document Intelligence Assistant
+Phase Intermediate RAG Progress Summary
+
+✅ Step 1: Implemented Vector Retrieval
+Created:
+backend/app/services/rag/retrieval/vector_retriever.py
+Implemented semantic/vector retrieval using ChromaDB embeddings.
+The retriever supports:
+Query embedding generation
+Top-k similarity search
+Metadata filtering using where
+Conversion of Chroma results into RetrievedChunk objects
+Status: ✅ Done
+
+✅ Step 2: Implemented BM25 Keyword Retrieval
+Created:
+backend/app/services/rag/retrieval/keyword/bm25_retriever.py
+Implemented keyword-based retrieval using BM25.
+This provides lexical matching for queries where exact words or terms are important.
+Status: ✅ Done
+
+✅ Step 3: Implemented Hybrid Retrieval
+Created:
+backend/app/services/rag/retrieval/hybrid/hybrid_retriever.py
+Implemented hybrid retrieval combining:
+Vector Retrieval
++
+BM25 Keyword Retrieval
+The hybrid retriever supports document-level filtering through:
+where={
+    "document_id": document_id
+}
+Status: ✅ Done
+
+✅ Step 4: Implemented Reciprocal Rank Fusion (RRF)
+Created:
+backend/app/services/rag/fusion/rrf.py
+Implemented Reciprocal Rank Fusion to combine ranked results from multiple retrieval strategies.
+Pipeline:
+Vector Results
+      +
+BM25 Results
+      ↓
+RRF
+      ↓
+Combined Ranked Results
+Status: ✅ Done
+
+✅ Step 5: Implemented Cross-Encoder Reranking
+Created:
+backend/app/services/rag/reranking/cross_encoder.py
+Implemented cross-encoder reranking using:
+cross-encoder/ms-marco-MiniLM-L-6-v2
+The reranker scores retrieved chunks against the user query and returns the most relevant chunks.
+Status: ✅ Done
+
+✅ Step 6: Implemented Context Compression
+Created:
+backend/app/services/rag/context/compressor.py
+Implemented query-aware context compression.
+The compressor reduces unnecessary retrieved content before sending it to the LLM.
+It supports configurable:
+max_sentences_per_chunk
+Status: ✅ Done
+
+✅ Step 7: Implemented RAG Prompt Construction
+Created:
+backend/app/services/rag/prompts/rag_prompt.py
+Implemented a dedicated RAG prompt that instructs the LLM to:
+Use the provided document context
+Avoid unsupported facts
+Avoid hallucinating information
+Indicate when the answer cannot be determined from the provided context
+Status: ✅ Done
+
+✅ Step 8: Implemented LLM Generation Abstraction
+Created:
+backend/app/services/rag/generation/llm_generator.py
+Implemented an LLM generation abstraction using:
+llm_callable
+This keeps the RAG pipeline independent from a specific LLM provider.
+Status: ✅ Done
+
+✅ Step 9: Implemented Complete RAG Pipeline
+Created:
+backend/app/services/rag/pipeline/rag_pipeline.py
+Implemented the complete Intermediate RAG flow:
+Hybrid Retrieval
+      ↓
+Cross-Encoder Reranking
+      ↓
+Context Compression
+      ↓
+RAG Prompt Construction
+      ↓
+LLM Generation
+The pipeline returns:
+query
+answer
+retrieved_chunks
+reranked_chunks
+compressed_chunks
+prompt
+model
+metadata
+Status: ✅ Done
+
+✅ Step 10: Implemented Document Indexing Service
+Created:
+backend/app/services/indexing_service.py
+Implemented the document indexing pipeline:
+Document
+   ↓
+Text Extraction
+   ↓
+Text Processing
+   ↓
+Chunking
+   ↓
+Embeddings
+   ↓
+ChromaDB
+Each chunk is stored with document metadata.
+Status: ✅ Done
+
+✅ Step 11: Added Document Processing Status
+Updated:
+backend/app/services/document_service.py
+Implemented document status updates during indexing.
+Supported statuses include:
+uploaded
+indexed
+error
+Status: ✅ Done
+
+✅ Step 12: Integrated Indexing into Document Upload
+Updated:
+backend/app/api/documents.py
+Document upload now performs:
+Upload
+   ↓
+Save File
+   ↓
+Extract Content
+   ↓
+Index Document
+   ↓
+Update Status
+The API returns the indexed document status.
+Status: ✅ Done
+
+✅ Step 13: Implemented RAG Request/Response Schemas
+Created:
+backend/app/schemas/rag.py
+Implemented:
+RAGQueryRequest
+RAGQueryResponse
+RAGSource
+The request supports:
+query
+n_results
+document_id
+Status: ✅ Done
+
+✅ Step 14: Implemented RAG API Endpoint
+Created:
+backend/app/api/rag.py
+Implemented:
+POST /api/rag/query
+The endpoint supports optional document filtering.
+Response includes:
+query
+answer
+model
+sources
+metadata
+Status: ✅ Done
+
+✅ Step 15: Implemented Source Reporting
+Integrated source information into the RAG response.
+Each source contains:
+document_id
+filename
+chunk_id
+chunk_index
+Example flow:
+Answer
+  +
+Source Chunks
+Status: ✅ Done
+
+✅ Step 16: Implemented Local Ollama LLM Provider
+Created:
+backend/app/services/rag/generation/ollama_provider.py
+Integrated:
+Ollama
+with:
+Qwen3 8B Q4_K_M
+The Python Ollama client was successfully configured and tested.
+Status: ✅ Done
+
+✅ Step 17: Implemented Mock / Ollama Provider Separation
+Implemented environment-based provider selection.
+For tests:
+RAG_LLM_PROVIDER=mock
+For real local generation:
+RAG_LLM_PROVIDER=ollama
+Configured model:
+OLLAMA_MODEL=qwen3:8b-q4_K_M
+Status: ✅ Done
+
+✅ Step 18: Implemented OCR Processing
+Implemented Tesseract OCR support using:
+pytesseract
+Pillow
+pdf2image
+Poppler
+Implemented OCR preprocessing including:
+grayscale
+upscaling
+autocontrast
+sharpening
+thresholding
+Status: ✅ Done
+
+✅ Step 19: Implemented Scanned PDF OCR Fallback
+Updated:
+backend/app/parsers/pdf_parser.py
+Implemented:
+Native PDF Text Extraction
+        ↓
+Insufficient Text
+        ↓
+OCR Fallback
+        ↓
+Tesseract
+Scanned PDF validation was successfully completed.
+Status: ✅ Done
+
+✅ Step 20: Implemented Document-Scoped RAG
+Added document filtering through:
+document_id
+Example:
+
+{
+  "query": "What is this document about?",
+  "n_results": 5,
+  "document_id": "..."
+}
+The retrieval pipeline restricts results to the requested document.
+Status: ✅ Done
+
+✅ Step 21: Validated Positive RAG Grounding
+Tested factual questions whose answers were present in the document.
+Example:
+What does the document say about blind text?
+Qwen3 generated an answer supported by the retrieved chunks.
+Status: ✅ Done
+
+✅ Step 22: Validated Negative / Out-of-Context Grounding
+Tested a question not supported by the document:
+What is the population of Japan according to this document?
+The model correctly responded that the answer could not be determined from the provided documents.
+Status: ✅ Done
+
+✅ Step 23: Validated End-to-End RAG Integration
+Created:
+backend/tests/integration/test_document_to_rag.py
+Validated:
+Document
+   ↓
+Indexing
+   ↓
+ChromaDB
+   ↓
+Document Filtering
+   ↓
+Hybrid Retrieval
+   ↓
+Reranking
+   ↓
+Compression
+   ↓
+Qwen3
+   ↓
+Sources
+Status: ✅ Done
+
+✅ Step 24: Validated TXT Format
+Validated complete RAG flow for TXT documents.
+Result:
+status              = indexed
+retrieved_results   = 1
+reranked_results    = 1
+compressed_results  = 1
+model               = qwen3:8b-q4_K_M
+sources              = 1
+Status: ✅ Done
+
+✅ Step 25: Validated PDF Format
+Validated complete RAG flow for PDF documents.
+Result:
+retrieved_results   = 2
+reranked_results    = 2
+compressed_results  = 2
+model               = qwen3:8b-q4_K_M
+sources              = 2
+Status: ✅ Done
+
+✅ Step 26: Validated DOCX Format
+Validated complete RAG flow for DOCX documents.
+Result:
+retrieved_results   = 1
+reranked_results    = 1
+compressed_results  = 1
+model               = qwen3:8b-q4_K_M
+sources              = 1
+Status: ✅ Done
+
+✅ Step 27: Validated PPTX Format
+Validated complete RAG flow for PPTX documents.
+Result:
+retrieved_results   = 1
+reranked_results    = 1
+compressed_results  = 1
+model               = qwen3:8b-q4_K_M
+sources              = 1
+Status: ✅ Done
+
+✅ Step 28: Validated Markdown Format
+Validated complete RAG flow for Markdown documents.
+Result:
+retrieved_results   = 1
+reranked_results    = 1
+compressed_results  = 1
+model               = qwen3:8b-q4_K_M
+sources              = 1
+Status: ✅ Done
+
+✅ Step 29: Validated Scanned PDF Format
+Validated scanned PDF ingestion through OCR fallback.
+The scanned invoice PDF was successfully converted through OCR and queried using the RAG pipeline.
+Result:
+retrieved_results   = 1
+reranked_results    = 1
+compressed_results  = 1
+model               = qwen3:8b-q4_K_M
+sources              = 1
+Status: ✅ Done
+
+⚠️ Step 30: Validated Image OCR
+Validated PNG OCR using Tesseract.
+OCR preprocessing improved extraction, but the tested image was only:
+400 × 400
+The resulting OCR text was noisy.
+Status: ⚠️ Partially Validated
+Known limitation:
+OCR quality depends on source image resolution and quality.
+
+⏭️ Step 31: Deferred CSV Validation
+CSV validation was deferred because the current large CSV sample caused high ingestion latency.
+Status: ⏭️ Deferred
+
+⏭️ Step 32: ZIP Ingestion Deferred
+ZIP ingestion is not currently implemented in the parser layer.
+Status: ⏭️ Deferred
+
+✅ Step 33: Added Automated Testing
+Implemented unit, API, and integration tests covering the RAG components.
+Current full test result:
+95 passed
+2 warnings
+0 failures
+Normal tests:
+93 passed
+Integration tests:
+2 passed
+Status: ✅ Done
+
+✅ Step 34: Added Test Separation
+Separated deterministic tests from real Ollama integration tests.
+Normal tests:
+mock LLM
+Integration tests:
+Ollama + Qwen3
+Status: ✅ Done
+
+✅ Step 35: Git Runtime Data Cleanup
+Configured .gitignore to exclude runtime/local data such as:
+.env
+backend/uploads/
+backend/data/chroma/
+backend/venv/
+__pycache__/
+.pytest_cache/
+Kept:
+.env.example
+for configuration reference.
+Status: ✅ Done

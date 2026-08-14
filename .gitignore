@@ -221,3 +221,5 @@ data/chroma/
 
 # ChromaDB local persistent data
 backend/data/chroma/
+# AI Document Intelligence - local uploaded documents
+backend/uploads/
