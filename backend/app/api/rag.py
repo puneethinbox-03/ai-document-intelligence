@@ -115,5 +115,6 @@ def query_documents(
         answer=result.answer,
         model=result.model,
         sources=sources,
+        relevance=result.relevance,
         metadata=result.metadata,
     )

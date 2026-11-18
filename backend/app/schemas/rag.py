@@ -2,6 +2,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from app.services.rag.relevance.models import RelevanceResult
+
 
 class RAGQueryRequest(BaseModel):
     """
@@ -46,4 +48,5 @@ class RAGQueryResponse(BaseModel):
     answer: str
     model: str
     sources: list[RAGSource]
+    relevance: RelevanceResult
     metadata: dict[str, Any]

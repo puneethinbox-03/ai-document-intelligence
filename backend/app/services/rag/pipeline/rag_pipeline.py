@@ -1,3 +1,4 @@
+
 from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
@@ -9,6 +10,10 @@ from app.services.rag.generation.llm_generator import (
 from app.services.rag.reranking.cross_encoder import rerank
 from app.services.rag.retrieval.hybrid.hybrid_retriever import (
     retrieve_hybrid,
+)
+from app.services.rag.relevance.models import RelevanceResult
+from app.services.rag.relevance.relevance_service import (
+    calculate_relevance,
 )
 from app.services.rag.retrieval.models import RetrievedChunk
 
@@ -27,6 +32,7 @@ class RAGPipelineResult:
     compressed_chunks: list[RetrievedChunk]
     prompt: str
     model: str
+    relevance: RelevanceResult
     metadata: dict[str, Any]
 
 
@@ -47,6 +53,8 @@ def run_rag_pipeline(
         Hybrid Retrieval
               ↓
         Cross-Encoder Reranking
+              ↓
+        Relevance Assessment
               ↓
         Context Compression
               ↓
@@ -111,7 +119,13 @@ def run_rag_pipeline(
         reranked_chunks = []
 
     # ---------------------------------------------------------
-    # 3. Context Compression
+    # 3. Relevance Assessment
+    # ---------------------------------------------------------
+
+    relevance = calculate_relevance(reranked_chunks)
+
+    # ---------------------------------------------------------
+    # 4. Context Compression
     # ---------------------------------------------------------
 
     if reranked_chunks:
@@ -126,7 +140,7 @@ def run_rag_pipeline(
         compressed_chunks = []
 
     # ---------------------------------------------------------
-    # 4. LLM Generation
+    # 5. LLM Generation
     # ---------------------------------------------------------
 
     generation_result: GenerationResult = generate_answer(
@@ -137,7 +151,7 @@ def run_rag_pipeline(
     )
 
     # ---------------------------------------------------------
-    # 5. Return complete pipeline result
+    # 6. Return Complete Pipeline Result
     # ---------------------------------------------------------
 
     return RAGPipelineResult(
@@ -148,6 +162,7 @@ def run_rag_pipeline(
         compressed_chunks=compressed_chunks,
         prompt=generation_result.prompt,
         model=generation_result.model,
+        relevance=relevance,
         metadata={
             "retrieved_results": len(retrieved_chunks),
             "reranked_results": len(reranked_chunks),
