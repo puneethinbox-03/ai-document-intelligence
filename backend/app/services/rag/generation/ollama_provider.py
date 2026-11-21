@@ -1,4 +1,6 @@
+
 import os
+from collections.abc import Iterator
 
 import ollama
 
@@ -54,3 +56,59 @@ def generate_with_ollama(
         )
 
     return answer
+
+
+def stream_with_ollama(
+    prompt: str,
+) -> Iterator[str]:
+    """
+    Stream answer chunks from the local Ollama model.
+
+    Each yielded string contains a portion of the generated answer.
+    """
+
+    if not prompt or not prompt.strip():
+        raise ValueError("Prompt cannot be empty")
+
+    try:
+        response_stream = ollama.chat(
+            model=OLLAMA_MODEL,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            stream=True,
+        )
+
+        has_content = False
+
+        for chunk in response_stream:
+            try:
+                content = chunk["message"]["content"]
+            except (KeyError, TypeError) as exc:
+                raise RuntimeError(
+                    "Invalid streaming response received from Ollama"
+                ) from exc
+
+            if not isinstance(content, str):
+                raise TypeError(
+                    "Ollama streaming content must be a string"
+                )
+
+            if content:
+                has_content = True
+                yield content
+
+        if not has_content:
+            raise RuntimeError(
+                "Ollama returned an empty streaming response"
+            )
+
+    except (ValueError, TypeError):
+        raise
+    except Exception as exc:
+        raise RuntimeError(
+            f"Ollama streaming failed: {exc}"
+        ) from exc

@@ -1,8 +1,10 @@
+
 import pytest
 
 from app.services.rag.generation.llm_generator import (
     GenerationResult,
     generate_answer,
+    stream_answer,
 )
 from app.services.rag.retrieval.models import RetrievedChunk
 
@@ -30,6 +32,11 @@ def create_test_chunks() -> list[RetrievedChunk]:
     ]
 
 
+# ---------------------------------------------------------
+# Existing synchronous generation tests
+# ---------------------------------------------------------
+
+
 def test_generate_answer_without_llm():
     chunks = create_test_chunks()
 
@@ -55,7 +62,6 @@ def test_generate_answer_with_mock_llm():
         assert "Python is a programming language." in prompt
 
         return "Python is a programming language."
-
 
     result = generate_answer(
         query="What is Python?",
@@ -153,4 +159,103 @@ def test_llm_return_type_validation():
             query="What is Python?",
             chunks=chunks,
             llm_callable=invalid_llm,
+        )
+
+
+# ---------------------------------------------------------
+# New streaming generation tests
+# ---------------------------------------------------------
+
+
+def test_stream_answer_with_mock_llm():
+    chunks = create_test_chunks()
+
+    def mock_llm_stream(prompt: str):
+        assert "What is Python?" in prompt
+        assert "Python is a programming language." in prompt
+
+        yield "Python is "
+        yield "a programming language."
+
+    result = list(
+        stream_answer(
+            query="What is Python?",
+            chunks=chunks,
+            llm_stream_callable=mock_llm_stream,
+        )
+    )
+
+    assert result == [
+        "Python is ",
+        "a programming language.",
+    ]
+
+    assert "".join(result) == "Python is a programming language."
+
+
+def test_stream_answer_without_llm():
+    chunks = create_test_chunks()
+
+    result = list(
+        stream_answer(
+            query="What is Python?",
+            chunks=chunks,
+        )
+    )
+
+    assert len(result) == 1
+    assert "LLM provider is not configured." in result[0]
+
+
+def test_stream_answer_empty_query():
+    with pytest.raises(ValueError):
+        list(
+            stream_answer(
+                query="",
+                chunks=create_test_chunks(),
+            )
+        )
+
+
+def test_stream_answer_whitespace_query():
+    with pytest.raises(ValueError):
+        list(
+            stream_answer(
+                query="   ",
+                chunks=create_test_chunks(),
+            )
+        )
+
+
+def test_stream_answer_invalid_chunk_type():
+    chunks = create_test_chunks()
+
+    def invalid_stream(prompt: str):
+        yield "Valid text"
+        yield 123
+
+    with pytest.raises(TypeError):
+        list(
+            stream_answer(
+                query="What is Python?",
+                chunks=chunks,
+                llm_stream_callable=invalid_stream,
+            )
+        )
+
+
+def test_stream_answer_empty_result():
+    chunks = create_test_chunks()
+
+    def empty_stream(prompt: str):
+        yield ""
+        yield ""
+
+    with pytest.raises(RuntimeError):
+        list(
+            stream_answer(
+                query="What is Python?",
+                chunks=chunks,
+                llm_stream_callable=empty_stream,
+            )
         )
