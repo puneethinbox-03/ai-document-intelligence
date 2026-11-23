@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.main import app
 
 
@@ -20,8 +21,9 @@ def use_mock_llm(monkeypatch):
     test_ollama_provider.py.
     """
 
-    monkeypatch.setenv(
-        "RAG_LLM_PROVIDER",
+    monkeypatch.setattr(
+        settings,
+        "rag_llm_provider",
         "mock",
     )
 
@@ -206,7 +208,7 @@ def _create_mock_streaming_result(token_stream):
 
 
 # ============================================================
-# New streaming RAG API tests
+# Streaming RAG API tests
 # ============================================================
 
 

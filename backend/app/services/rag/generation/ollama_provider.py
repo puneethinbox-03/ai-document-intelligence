@@ -1,13 +1,14 @@
 
-import os
 from collections.abc import Iterator
 
 import ollama
 
+from app.core.config import settings
 
-OLLAMA_MODEL = os.getenv(
-    "OLLAMA_MODEL",
-    "qwen3:8b-q4_K_M",
+
+# Create one reusable Ollama client using centralized configuration.
+ollama_client = ollama.Client(
+    host=settings.ollama_url,
 )
 
 
@@ -15,15 +16,15 @@ def generate_with_ollama(
     prompt: str,
 ) -> str:
     """
-    Generate an answer using the local Ollama model.
+    Generate an answer using the configured Ollama model.
     """
 
     if not prompt or not prompt.strip():
         raise ValueError("Prompt cannot be empty")
 
     try:
-        response = ollama.chat(
-            model=OLLAMA_MODEL,
+        response = ollama_client.chat(
+            model=settings.ollama_model,
             messages=[
                 {
                     "role": "user",
@@ -62,7 +63,7 @@ def stream_with_ollama(
     prompt: str,
 ) -> Iterator[str]:
     """
-    Stream answer chunks from the local Ollama model.
+    Stream answer chunks from the configured Ollama model.
 
     Each yielded string contains a portion of the generated answer.
     """
@@ -71,8 +72,8 @@ def stream_with_ollama(
         raise ValueError("Prompt cannot be empty")
 
     try:
-        response_stream = ollama.chat(
-            model=OLLAMA_MODEL,
+        response_stream = ollama_client.chat(
+            model=settings.ollama_model,
             messages=[
                 {
                     "role": "user",

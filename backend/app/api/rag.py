@@ -1,5 +1,5 @@
+
 import json
-import os
 from collections.abc import Iterator
 from typing import Any
 
@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 
+from app.core.config import settings
 from app.schemas.rag import (
     RAGQueryRequest,
     RAGQueryResponse,
@@ -50,12 +51,10 @@ def _get_llm_provider():
     Return the synchronous LLM provider and model name.
     """
 
-    provider = os.getenv("RAG_LLM_PROVIDER", "mock").strip().lower()
-
-    if provider == "ollama":
+    if settings.rag_llm_provider == "ollama":
         return (
             generate_with_ollama,
-            os.getenv("OLLAMA_MODEL", "qwen3:8b-q4_K_M"),
+            settings.ollama_model,
         )
 
     return (_mock_llm, "mock-llm")
@@ -66,12 +65,10 @@ def _get_llm_stream_provider():
     Return the streaming LLM provider and model name.
     """
 
-    provider = os.getenv("RAG_LLM_PROVIDER", "mock").strip().lower()
-
-    if provider == "ollama":
+    if settings.rag_llm_provider == "ollama":
         return (
             stream_with_ollama,
-            os.getenv("OLLAMA_MODEL", "qwen3:8b-q4_K_M"),
+            settings.ollama_model,
         )
 
     return (_mock_llm_stream, "mock-llm")

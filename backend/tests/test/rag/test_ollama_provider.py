@@ -56,7 +56,7 @@ def test_ollama_stream_provider(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "app.services.rag.generation.ollama_provider.ollama.chat",
+        "app.services.rag.generation.ollama_provider.ollama_client.chat",
         mock_ollama_chat,
     )
 
@@ -100,7 +100,7 @@ def test_ollama_stream_skips_empty_chunks(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "app.services.rag.generation.ollama_provider.ollama.chat",
+        "app.services.rag.generation.ollama_provider.ollama_client.chat",
         mock_ollama_chat,
     )
 
@@ -142,7 +142,7 @@ def test_ollama_stream_invalid_chunk_type(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "app.services.rag.generation.ollama_provider.ollama.chat",
+        "app.services.rag.generation.ollama_provider.ollama_client.chat",
         mock_ollama_chat,
     )
 
@@ -164,7 +164,7 @@ def test_ollama_stream_empty_response(monkeypatch):
         return iter([])
 
     monkeypatch.setattr(
-        "app.services.rag.generation.ollama_provider.ollama.chat",
+        "app.services.rag.generation.ollama_provider.ollama_client.chat",
         mock_ollama_chat,
     )
 
@@ -188,7 +188,7 @@ def test_ollama_stream_provider_error(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "app.services.rag.generation.ollama_provider.ollama.chat",
+        "app.services.rag.generation.ollama_provider.ollama_client.chat",
         mock_ollama_chat,
     )
 

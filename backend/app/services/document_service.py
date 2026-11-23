@@ -1,15 +1,18 @@
+
 import json
 from pathlib import Path
 from uuid import uuid4
 
 from fastapi import UploadFile
 
+from app.core.config import settings
+
 
 # ============================================================
 # Configuration
 # ============================================================
 
-UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR = settings.upload_dir
 METADATA_FILE = UPLOAD_DIR / "metadata.json"
 
 ALLOWED_EXTENSIONS = {
@@ -21,10 +24,10 @@ ALLOWED_EXTENSIONS = {
     ".md",
     ".png",
     ".jpg",
-    ".jpeg"
+    ".jpeg",
 }
 
-MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+MAX_FILE_SIZE = settings.max_file_size_mb * 1024 * 1024
 
 
 # ============================================================
@@ -141,9 +144,12 @@ def get_document_file_path(document_id: str) -> Path | None:
                 return file_path
 
     return None
+
+
 # ============================================================
 # Upload Service
 # ============================================================
+
 def update_document_status(
     document_id: str,
     status: str,
@@ -169,6 +175,7 @@ def update_document_status(
             return document
 
     return None
+
 
 async def save_uploaded_file(
     file: UploadFile,
@@ -213,7 +220,8 @@ async def save_uploaded_file(
 
     if len(file_content) > MAX_FILE_SIZE:
         raise ValueError(
-            "File size exceeds the 50 MB limit"
+            f"File size exceeds the "
+            f"{settings.max_file_size_mb} MB limit"
         )
 
     # --------------------------------------------------------

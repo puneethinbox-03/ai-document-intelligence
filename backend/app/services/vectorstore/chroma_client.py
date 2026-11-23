@@ -1,14 +1,32 @@
-from pathlib import Path
 
 import chromadb
 
+from app.core.config import settings
 
-CHROMA_PATH = Path("data/chroma")
+
+# ============================================================
+# Configuration
+# ============================================================
+
+# Use the centralized ChromaDB storage path.
+CHROMA_PATH = settings.chroma_path
+
+
+# ============================================================
+# ChromaDB Client
+# ============================================================
 
 _client = None
 
 
 def get_chroma_client():
+    """
+    Return the reusable persistent ChromaDB client.
+
+    The client is initialized only once and reused
+    throughout the application's lifetime.
+    """
+
     global _client
 
     if _client is None:
