@@ -1,8 +1,7 @@
-
-from pathlib import Path
+﻿from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,10 +11,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # config.py is located inside:
 # backend/app/core/config.py
-#
-# parents[0] = backend/app/core
-# parents[1] = backend/app
-# parents[2] = backend
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
@@ -84,6 +79,24 @@ class Settings(BaseSettings):
     ollama_url: str = "http://localhost:11434"
 
     # --------------------------------------------------------
+    # PostgreSQL database
+    # --------------------------------------------------------
+
+    postgres_host: str = "localhost"
+
+    postgres_port: int = Field(
+        default=5432,
+        ge=1,
+        le=65535,
+    )
+
+    postgres_db: str = "ai_document_intelligence"
+
+    postgres_user: str = "ai_document_app"
+
+    postgres_password: SecretStr = SecretStr("")
+
+    # --------------------------------------------------------
     # Document storage
     # --------------------------------------------------------
 
@@ -127,9 +140,6 @@ class Settings(BaseSettings):
     ) -> Path:
         """
         Resolve relative storage paths against backend/.
-
-        This keeps storage locations consistent even when
-        the application is started from a different directory.
         """
 
         if value.is_absolute():
