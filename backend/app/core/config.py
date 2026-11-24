@@ -1,16 +1,20 @@
-﻿from pathlib import Path
+﻿
+from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, SecretStr, field_validator, model_validator
+from pydantic import (
+    EmailStr,
+    Field,
+    SecretStr,
+    field_validator,
+    model_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 # ------------------------------------------------------------
 # Backend directory
 # ------------------------------------------------------------
-
-# config.py is located inside:
-# backend/app/core/config.py
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 
@@ -41,7 +45,6 @@ class Settings(BaseSettings):
     # --------------------------------------------------------
 
     app_name: str = "AI Document Intelligence Assistant"
-
     app_version: str = "0.1.0"
 
     app_env: Literal[
@@ -51,8 +54,13 @@ class Settings(BaseSettings):
     ] = "development"
 
     debug: bool = True
-
     api_prefix: str = "/api"
+
+    # --------------------------------------------------------
+    # Frontend
+    # --------------------------------------------------------
+
+    frontend_url: str = "http://localhost:3000"
 
     # --------------------------------------------------------
     # CORS
@@ -66,6 +74,83 @@ class Settings(BaseSettings):
     )
 
     # --------------------------------------------------------
+    # Authentication
+    # --------------------------------------------------------
+
+    session_cookie_name: str = "adi_session"
+    csrf_cookie_name: str = "adi_csrf"
+
+    session_lifetime_hours: int = Field(
+        default=24,
+        gt=0,
+        le=720,
+    )
+
+    session_cookie_secure: bool = False
+
+    session_cookie_samesite: Literal[
+        "lax",
+        "strict",
+        "none",
+    ] = "lax"
+
+    session_cookie_path: str = "/"
+
+    email_verification_token_lifetime_minutes: int = Field(
+        default=1440,
+        gt=0,
+        le=10080,
+    )
+
+    password_reset_token_lifetime_minutes: int = Field(
+        default=30,
+        gt=0,
+        le=1440,
+    )
+
+    password_min_length: int = Field(
+        default=12,
+        ge=8,
+        le=128,
+    )
+
+    password_max_length: int = Field(
+        default=128,
+        ge=12,
+        le=256,
+    )
+
+    csrf_protection_enabled: bool = True
+
+    # --------------------------------------------------------
+    # Email / SMTP
+    # --------------------------------------------------------
+
+    smtp_host: str | None = None
+
+    smtp_port: int = Field(
+        default=587,
+        ge=1,
+        le=65535,
+    )
+
+    smtp_username: str | None = None
+
+    smtp_password: SecretStr = SecretStr("")
+
+    smtp_from_email: EmailStr | None = None
+
+    smtp_from_name: str = "AI Document Intelligence Assistant"
+
+    smtp_starttls: bool = True
+
+    smtp_timeout_seconds: float = Field(
+        default=10.0,
+        gt=0,
+        le=120,
+    )
+
+    # --------------------------------------------------------
     # RAG / LLM
     # --------------------------------------------------------
 
@@ -75,7 +160,6 @@ class Settings(BaseSettings):
     ] = "mock"
 
     ollama_model: str = "qwen3:8b-q4_K_M"
-
     ollama_url: str = "http://localhost:11434"
 
     # --------------------------------------------------------
@@ -83,7 +167,6 @@ class Settings(BaseSettings):
     # --------------------------------------------------------
 
     postgres_host: str = "localhost"
-
     postgres_port: int = Field(
         default=5432,
         ge=1,
@@ -91,9 +174,7 @@ class Settings(BaseSettings):
     )
 
     postgres_db: str = "ai_document_intelligence"
-
     postgres_user: str = "ai_document_app"
-
     postgres_password: SecretStr = SecretStr("")
 
     # --------------------------------------------------------
@@ -138,9 +219,7 @@ class Settings(BaseSettings):
         cls,
         value: Path,
     ) -> Path:
-        """
-        Resolve relative storage paths against backend/.
-        """
+        """Resolve relative storage paths against backend/."""
 
         if value.is_absolute():
             return value.resolve()
@@ -153,14 +232,51 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_environment(self):
-        """
-        Prevent production from accidentally running
-        with development debug mode enabled.
-        """
+        """Validate production, authentication and SMTP settings."""
 
         if self.app_env == "production" and self.debug:
             raise ValueError(
                 "DEBUG must be false in production"
+            )
+
+        if (
+            self.app_env == "production"
+            and not self.session_cookie_secure
+        ):
+            raise ValueError(
+                "SESSION_COOKIE_SECURE must be true in production"
+            )
+
+        if (
+            self.session_cookie_samesite == "none"
+            and not self.session_cookie_secure
+        ):
+            raise ValueError(
+                "SESSION_COOKIE_SECURE must be true when "
+                "SESSION_COOKIE_SAMESITE is none"
+            )
+
+        if self.password_min_length > self.password_max_length:
+            raise ValueError(
+                "PASSWORD_MIN_LENGTH cannot exceed PASSWORD_MAX_LENGTH"
+            )
+
+        if self.smtp_host:
+            if not self.smtp_from_email:
+                raise ValueError(
+                    "SMTP_FROM_EMAIL is required when SMTP_HOST is configured"
+                )
+
+            if not self.smtp_starttls:
+                raise ValueError(
+                    "SMTP_STARTTLS must be true when SMTP is configured"
+                )
+
+        if bool(self.smtp_username) != bool(
+            self.smtp_password.get_secret_value()
+        ):
+            raise ValueError(
+                "SMTP_USERNAME and SMTP_PASSWORD must be configured together"
             )
 
         return self
