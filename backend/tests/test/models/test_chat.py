@@ -1,4 +1,6 @@
-﻿from app.models.base import Base
+﻿from sqlalchemy import UniqueConstraint
+
+from app.models.base import Base
 from app.models.chat import Chat, ChatDocument
 
 
@@ -39,6 +41,7 @@ def test_chat_user_foreign_key():
     foreign_key = next(iter(column.foreign_keys))
 
     assert foreign_key.target_fullname == "users.id"
+    assert foreign_key.ondelete == "CASCADE"
 
 
 def test_chat_title_configuration():
@@ -87,6 +90,7 @@ def test_chat_document_foreign_keys():
         foreign_key = next(iter(column.foreign_keys))
 
         assert foreign_key.target_fullname == expected_target
+        assert foreign_key.ondelete == "CASCADE"
 
 
 def test_chat_models_have_inherited_timestamps():
@@ -100,3 +104,51 @@ def test_chat_models_have_inherited_timestamps():
 
         assert table.c.created_at.type.timezone is True
         assert table.c.updated_at.type.timezone is True
+
+
+def test_chat_user_created_at_index():
+    """Verify the index used for chronological user chat listing."""
+
+    indexes = {
+        index.name: index
+        for index in Chat.__table__.indexes
+    }
+
+    index = indexes["ix_chats_user_id_created_at"]
+
+    assert [column.name for column in index.columns] == [
+        "user_id",
+        "created_at",
+    ]
+
+
+def test_chat_document_pair_has_unique_constraint():
+    """Prevent attaching the same document to a chat more than once."""
+
+    constraints = {
+        constraint.name: constraint
+        for constraint in ChatDocument.__table__.constraints
+    }
+
+    constraint = constraints["uq_chat_documents_chat_document"]
+
+    assert isinstance(constraint, UniqueConstraint)
+    assert [column.name for column in constraint.columns] == [
+        "chat_id",
+        "document_id",
+    ]
+
+
+def test_chat_document_document_id_index():
+    """Verify document-side association lookups are indexed."""
+
+    indexes = {
+        index.name: index
+        for index in ChatDocument.__table__.indexes
+    }
+
+    index = indexes["ix_chat_documents_document_id"]
+
+    assert [column.name for column in index.columns] == [
+        "document_id"
+    ]

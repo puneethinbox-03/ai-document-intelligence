@@ -91,3 +91,58 @@ def test_processing_job_error_fields_are_optional():
     assert isinstance(error_message.type, String)
     assert error_message.type.length == 500
     assert error_message.nullable is True
+
+
+def test_processing_job_check_constraints():
+    from sqlalchemy import CheckConstraint
+
+    constraints = {
+        constraint.name
+        for constraint in DocumentProcessingJob.__table__.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+
+    assert constraints == {
+        "ck_document_processing_jobs_status_valid",
+        "ck_document_processing_jobs_attempts_non_negative",
+        "ck_document_processing_jobs_max_attempts_positive",
+        "ck_document_processing_jobs_attempts_within_limit",
+    }
+
+
+def test_processing_job_status_available_at_index():
+    indexes = {
+        index.name: index
+        for index in DocumentProcessingJob.__table__.indexes
+    }
+
+    index = indexes[
+        "ix_document_processing_jobs_status_available_at"
+    ]
+
+    assert [column.name for column in index.columns] == [
+        "status",
+        "available_at",
+    ]
+
+
+def test_processing_job_document_id_index():
+    indexes = {
+        index.name: index
+        for index in DocumentProcessingJob.__table__.indexes
+    }
+
+    index = indexes["ix_document_processing_jobs_document_id"]
+
+    assert [column.name for column in index.columns] == [
+        "document_id",
+    ]
+
+
+def test_processing_job_document_foreign_key_cascades_on_delete():
+    foreign_keys = list(
+        DocumentProcessingJob.__table__.c.document_id.foreign_keys
+    )
+
+    assert len(foreign_keys) == 1
+    assert foreign_keys[0].ondelete == "CASCADE"

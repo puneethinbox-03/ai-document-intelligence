@@ -71,3 +71,54 @@ def test_usage_event_created_at_is_required_and_timezone_aware():
 
 def test_usage_event_does_not_have_updated_at():
     assert "updated_at" not in UsageEvent.__table__.columns
+
+
+def test_usage_event_check_constraints():
+    from sqlalchemy import CheckConstraint
+
+    constraints = {
+        constraint.name
+        for constraint in UsageEvent.__table__.constraints
+        if isinstance(constraint, CheckConstraint)
+    }
+
+    assert constraints == {
+        "ck_usage_events_quantity_positive",
+        "ck_usage_events_duration_non_negative",
+    }
+
+
+def test_usage_event_user_foreign_key_cascades_on_delete():
+    foreign_key = next(
+        iter(UsageEvent.__table__.c.user_id.foreign_keys)
+    )
+
+    assert foreign_key.ondelete == "CASCADE"
+
+
+def test_usage_event_user_created_at_index():
+    indexes = {
+        index.name: index
+        for index in UsageEvent.__table__.indexes
+    }
+
+    index = indexes["ix_usage_events_user_id_created_at"]
+
+    assert [column.name for column in index.columns] == [
+        "user_id",
+        "created_at",
+    ]
+
+
+def test_usage_event_type_created_at_index():
+    indexes = {
+        index.name: index
+        for index in UsageEvent.__table__.indexes
+    }
+
+    index = indexes["ix_usage_events_event_type_created_at"]
+
+    assert [column.name for column in index.columns] == [
+        "event_type",
+        "created_at",
+    ]

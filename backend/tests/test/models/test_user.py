@@ -1,4 +1,4 @@
-﻿from sqlalchemy import Boolean, DateTime, String
+﻿from sqlalchemy import Boolean, DateTime, String, UniqueConstraint
 
 from app.models.base import Base
 from app.models.user import User
@@ -48,6 +48,25 @@ def test_user_email_and_password_columns():
     assert isinstance(table.c.password_hash.type, String)
     assert table.c.password_hash.type.length == 255
     assert table.c.password_hash.nullable is False
+
+
+def test_user_normalized_email_has_unique_constraint():
+    """Verify normalized email addresses are unique."""
+
+    constraints = [
+        constraint
+        for constraint in User.__table__.constraints
+        if isinstance(constraint, UniqueConstraint)
+    ]
+
+    assert len(constraints) == 1
+
+    constraint = constraints[0]
+
+    assert constraint.name == "uq_users_email_normalized"
+    assert [column.name for column in constraint.columns] == [
+        "email_normalized"
+    ]
 
 
 def test_user_optional_fields():

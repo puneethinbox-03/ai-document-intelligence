@@ -81,3 +81,39 @@ def test_message_timestamp_configuration():
 
     assert table.c.created_at.type.timezone is True
     assert table.c.updated_at.type.timezone is True
+
+
+def test_message_role_check_constraint():
+    from sqlalchemy import CheckConstraint
+
+    constraints = [
+        constraint
+        for constraint in Message.__table__.constraints
+        if isinstance(constraint, CheckConstraint)
+    ]
+
+    assert any(
+        constraint.name == "ck_messages_role_valid"
+        for constraint in constraints
+    )
+
+
+def test_message_chat_id_created_at_index():
+    indexes = {
+        index.name: index
+        for index in Message.__table__.indexes
+    }
+
+    index = indexes["ix_messages_chat_id_created_at"]
+
+    assert [column.name for column in index.columns] == [
+        "chat_id",
+        "created_at",
+    ]
+
+
+def test_message_chat_foreign_key_cascades_on_delete():
+    foreign_keys = list(Message.__table__.c.chat_id.foreign_keys)
+
+    assert len(foreign_keys) == 1
+    assert foreign_keys[0].ondelete == "CASCADE"

@@ -1,64 +1,72 @@
 ﻿from uuid import UUID
 
-from sqlalchemy import BigInteger, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    String,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
 
 class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """
-    Stores document metadata and ownership information.
-
-    Original files are stored in private object storage.
-    PostgreSQL stores the storage key, never a public file URL.
-
-    Document processing lifecycle:
-    Uploaded -> Validating -> Queued -> Processing -> Indexed
-
-    Failure and deletion states:
-    Failed, Deleting, Deleted
-    """
-
     __tablename__ = "documents"
 
-    # Owner of this document.
+    __table_args__ = (
+        UniqueConstraint(
+            "storage_key",
+            name="uq_documents_storage_key",
+        ),
+        CheckConstraint(
+            "file_size_bytes > 0",
+            name="file_size_positive",
+        ),
+        CheckConstraint(
+            "status IN ('uploaded', 'validating', 'queued', "
+            "'processing', 'indexed', 'failed', 'deleting', 'deleted')",
+            name="status_valid",
+        ),
+        Index(
+            "ix_documents_user_id_status",
+            "user_id",
+            "status",
+        ),
+    )
+
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
 
-    # Filename supplied by the user, retained as metadata.
     original_filename: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
     )
 
-    # Private object-storage key, not a publicly accessible URL.
     storage_key: Mapped[str] = mapped_column(
         String(512),
         nullable=False,
     )
 
-    # Validated media type, for example application/pdf.
     content_type: Mapped[str] = mapped_column(
         String(127),
         nullable=False,
     )
 
-    # Original file size in bytes.
     file_size_bytes: Mapped[int] = mapped_column(
         BigInteger,
         nullable=False,
     )
 
-    # Optional SHA-256 checksum for integrity and duplicate detection.
     sha256_hash: Mapped[str | None] = mapped_column(
         String(64),
         nullable=True,
     )
 
-    # Lifecycle status, enforced by application logic.
     status: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
@@ -66,14 +74,31 @@ class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         server_default="uploaded",
     )
 
-    # Sanitized error category; never store document contents or secrets.
     error_code: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
     )
 
-    # Safe user-facing processing error message, if applicable.
     error_message: Mapped[str | None] = mapped_column(
         String(500),
         nullable=True,
+    )
+
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="documents",
+    )
+
+    chat_associations: Mapped[list["ChatDocument"]] = relationship(
+        "ChatDocument",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+
+    processing_jobs: Mapped[list["DocumentProcessingJob"]] = relationship(
+        "DocumentProcessingJob",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )

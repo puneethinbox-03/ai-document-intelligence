@@ -74,3 +74,39 @@ def test_audit_event_created_at_is_required_and_timezone_aware():
 
 def test_audit_event_does_not_have_updated_at():
     assert "updated_at" not in AuditEvent.__table__.columns
+
+
+def test_audit_event_actor_foreign_key_uses_set_null():
+    foreign_key = next(
+        iter(AuditEvent.__table__.c.actor_user_id.foreign_keys)
+    )
+
+    assert foreign_key.ondelete == "SET NULL"
+
+
+def test_audit_event_actor_created_at_index():
+    indexes = {
+        index.name: index
+        for index in AuditEvent.__table__.indexes
+    }
+
+    index = indexes["ix_audit_events_actor_user_id_created_at"]
+
+    assert [column.name for column in index.columns] == [
+        "actor_user_id",
+        "created_at",
+    ]
+
+
+def test_audit_event_resource_lookup_index():
+    indexes = {
+        index.name: index
+        for index in AuditEvent.__table__.indexes
+    }
+
+    index = indexes["ix_audit_events_resource_type_resource_id"]
+
+    assert [column.name for column in index.columns] == [
+        "resource_type",
+        "resource_id",
+    ]

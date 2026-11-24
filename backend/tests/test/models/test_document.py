@@ -1,4 +1,4 @@
-﻿from sqlalchemy import BigInteger, String
+﻿from sqlalchemy import BigInteger, CheckConstraint, String, UniqueConstraint
 
 from app.models.base import Base
 from app.models.document import Document
@@ -46,6 +46,7 @@ def test_document_user_foreign_key():
     foreign_key = next(iter(column.foreign_keys))
 
     assert foreign_key.target_fullname == "users.id"
+    assert foreign_key.ondelete == "CASCADE"
 
 
 def test_document_file_metadata_configuration():
@@ -106,3 +107,74 @@ def test_document_timestamp_configuration():
 
     assert table.c.created_at.type.timezone is True
     assert table.c.updated_at.type.timezone is True
+
+
+def test_document_storage_key_has_unique_constraint():
+    """Verify storage keys cannot be duplicated."""
+
+    constraints = {
+        constraint.name: constraint
+        for constraint in Document.__table__.constraints
+    }
+
+    constraint = constraints["uq_documents_storage_key"]
+
+    assert isinstance(constraint, UniqueConstraint)
+    assert [column.name for column in constraint.columns] == [
+        "storage_key"
+    ]
+
+
+def test_document_file_size_check_constraint():
+    """Verify document file sizes must be positive."""
+
+    constraints = {
+        constraint.name: constraint
+        for constraint in Document.__table__.constraints
+    }
+
+    constraint = constraints["ck_documents_file_size_positive"]
+
+    assert isinstance(constraint, CheckConstraint)
+    assert "file_size_bytes > 0" in str(constraint.sqltext)
+
+
+def test_document_status_check_constraint():
+    """Verify document statuses are restricted to lifecycle values."""
+
+    constraints = {
+        constraint.name: constraint
+        for constraint in Document.__table__.constraints
+    }
+
+    constraint = constraints["ck_documents_status_valid"]
+
+    assert isinstance(constraint, CheckConstraint)
+
+    for status in (
+        "uploaded",
+        "validating",
+        "queued",
+        "processing",
+        "indexed",
+        "failed",
+        "deleting",
+        "deleted",
+    ):
+        assert status in str(constraint.sqltext)
+
+
+def test_document_user_status_index():
+    """Verify the index used for user document filtering."""
+
+    indexes = {
+        index.name: index
+        for index in Document.__table__.indexes
+    }
+
+    index = indexes["ix_documents_user_id_status"]
+
+    assert [column.name for column in index.columns] == [
+        "user_id",
+        "status",
+    ]
