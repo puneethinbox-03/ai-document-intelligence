@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+﻿from pydantic import BaseModel
 
 
 class DocumentResponse(BaseModel):
@@ -7,6 +7,7 @@ class DocumentResponse(BaseModel):
     file_type: str
     file_size: int
     status: str
+
 
 class DocumentTextResponse(BaseModel):
     document_id: str

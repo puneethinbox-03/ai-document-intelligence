@@ -179,15 +179,14 @@ def test_production_requires_secure_session_cookie():
         )
 
 
-def test_production_accepts_secure_session_cookie():
+def test_development_accepts_secure_session_cookie():
     settings = Settings(
         _env_file=None,
-        app_env="production",
-        debug=False,
+        app_env="development",
         session_cookie_secure=True,
     )
 
-    assert settings.app_env == "production"
+    assert settings.app_env == "development"
     assert settings.session_cookie_secure is True
 
 
@@ -319,3 +318,78 @@ def test_smtp_accepts_valid_configuration():
     assert settings.smtp_username == "smtp-user"
     assert settings.smtp_password.get_secret_value() == "smtp-secret"
     assert str(settings.smtp_from_email) == "no-reply@example.com"
+
+
+# ------------------------------------------------------------
+# Private document storage configuration tests
+# ------------------------------------------------------------
+
+def test_private_storage_default_settings():
+    settings = Settings(_env_file=None)
+
+    assert settings.storage_backend == "local"
+    assert settings.upload_dir.is_absolute()
+    assert settings.sanitized_dir.is_absolute()
+    assert settings.max_file_size_mb == 50
+
+
+def test_private_storage_paths_are_separate():
+    settings = Settings(_env_file=None)
+
+    assert settings.upload_dir != settings.sanitized_dir
+
+
+def test_private_storage_settings_load_from_environment(monkeypatch):
+    monkeypatch.setenv("STORAGE_BACKEND", "local")
+    monkeypatch.setenv("UPLOAD_DIR", "custom_uploads")
+    monkeypatch.setenv(
+        "SANITIZED_DIR",
+        "custom_storage/sanitized",
+    )
+    monkeypatch.setenv("MAX_FILE_SIZE_MB", "75")
+
+    settings = Settings(_env_file=None)
+
+    assert settings.storage_backend == "local"
+    assert settings.upload_dir.name == "custom_uploads"
+    assert settings.sanitized_dir.name == "sanitized"
+    assert settings.max_file_size_mb == 75
+
+
+def test_private_storage_rejects_unsupported_backend():
+    with pytest.raises(ValidationError):
+        Settings(
+            _env_file=None,
+            storage_backend="unsupported",
+        )
+
+
+def test_private_storage_rejects_invalid_file_size():
+    with pytest.raises(ValidationError):
+        Settings(
+            _env_file=None,
+            max_file_size_mb=0,
+        )
+
+def test_production_rejects_local_document_storage():
+    with pytest.raises(
+        ValidationError,
+        match="Local document storage is not allowed in production",
+    ):
+        Settings(
+            _env_file=None,
+            app_env="production",
+            debug=False,
+            session_cookie_secure=True,
+            storage_backend="local",
+        )
+
+
+def test_development_allows_local_document_storage():
+    settings = Settings(
+        _env_file=None,
+        app_env="development",
+        storage_backend="local",
+    )
+
+    assert settings.storage_backend == "local"

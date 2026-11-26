@@ -223,3 +223,6 @@ data/chroma/
 backend/data/chroma/
 # AI Document Intelligence - local uploaded documents
 backend/uploads/
+
+# AI Document Intelligence - private sanitized document storage
+backend/data/private_storage/

@@ -181,7 +181,13 @@ class Settings(BaseSettings):
     # Document storage
     # --------------------------------------------------------
 
+    storage_backend: Literal["local"] = "local"
+
+    # Private original document storage.
     upload_dir: Path = Path("uploads")
+
+    # Separate storage for sanitized AI-processing derivatives.
+    sanitized_dir: Path = Path("data/private_storage/sanitized")
 
     max_file_size_mb: int = Field(
         default=50,
@@ -212,6 +218,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "upload_dir",
+        "sanitized_dir",
         "chroma_path",
     )
     @classmethod
@@ -237,6 +244,15 @@ class Settings(BaseSettings):
         if self.app_env == "production" and self.debug:
             raise ValueError(
                 "DEBUG must be false in production"
+            )
+
+        if (
+            self.app_env == "production"
+            and self.storage_backend == "local"
+        ):
+            raise ValueError(
+                "Local document storage is not allowed in production. "
+                "Configure a secure cloud storage backend."
             )
 
         if (
