@@ -13,6 +13,7 @@ from app.models.message import Message
 from app.models.processing_job import DocumentProcessingJob
 from app.models.audit_event import AuditEvent
 from app.models.usage_event import UsageEvent
+from app.models.processing_outbox import DocumentProcessingOutbox
 
 __all__ = [
     "Base",
@@ -25,6 +26,7 @@ __all__ = [
     "ChatDocument",
     "Message",
     "DocumentProcessingJob",
+    "DocumentProcessingOutbox",
     "AuditEvent",
     "UsageEvent",
 ]

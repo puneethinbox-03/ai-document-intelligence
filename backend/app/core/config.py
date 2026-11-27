@@ -1,6 +1,6 @@
-﻿
-from pathlib import Path
+﻿from pathlib import Path
 from typing import Literal
+from urllib.parse import urlsplit
 
 from pydantic import (
     EmailStr,
@@ -40,10 +40,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # --------------------------------------------------------
     # Application
-    # --------------------------------------------------------
-
     app_name: str = "AI Document Intelligence Assistant"
     app_version: str = "0.1.0"
 
@@ -56,16 +53,10 @@ class Settings(BaseSettings):
     debug: bool = True
     api_prefix: str = "/api"
 
-    # --------------------------------------------------------
     # Frontend
-    # --------------------------------------------------------
-
     frontend_url: str = "http://localhost:3000"
 
-    # --------------------------------------------------------
     # CORS
-    # --------------------------------------------------------
-
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:3000",
@@ -73,10 +64,7 @@ class Settings(BaseSettings):
         ]
     )
 
-    # --------------------------------------------------------
     # Authentication
-    # --------------------------------------------------------
-
     session_cookie_name: str = "adi_session"
     csrf_cookie_name: str = "adi_csrf"
 
@@ -122,10 +110,7 @@ class Settings(BaseSettings):
 
     csrf_protection_enabled: bool = True
 
-    # --------------------------------------------------------
     # Email / SMTP
-    # --------------------------------------------------------
-
     smtp_host: str | None = None
 
     smtp_port: int = Field(
@@ -135,13 +120,9 @@ class Settings(BaseSettings):
     )
 
     smtp_username: str | None = None
-
     smtp_password: SecretStr = SecretStr("")
-
     smtp_from_email: EmailStr | None = None
-
     smtp_from_name: str = "AI Document Intelligence Assistant"
-
     smtp_starttls: bool = True
 
     smtp_timeout_seconds: float = Field(
@@ -150,10 +131,7 @@ class Settings(BaseSettings):
         le=120,
     )
 
-    # --------------------------------------------------------
     # RAG / LLM
-    # --------------------------------------------------------
-
     rag_llm_provider: Literal[
         "mock",
         "ollama",
@@ -162,11 +140,9 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen3:8b-q4_K_M"
     ollama_url: str = "http://localhost:11434"
 
-    # --------------------------------------------------------
     # PostgreSQL database
-    # --------------------------------------------------------
-
     postgres_host: str = "localhost"
+
     postgres_port: int = Field(
         default=5432,
         ge=1,
@@ -177,16 +153,15 @@ class Settings(BaseSettings):
     postgres_user: str = "ai_document_app"
     postgres_password: SecretStr = SecretStr("")
 
-    # --------------------------------------------------------
-    # Document storage
-    # --------------------------------------------------------
+    # Redis / Background Processing
+    redis_url: SecretStr = SecretStr(
+        "redis://127.0.0.1:6379/0"
+    )
 
+    # Document storage
     storage_backend: Literal["local"] = "local"
 
-    # Private original document storage.
     upload_dir: Path = Path("uploads")
-
-    # Separate storage for sanitized AI-processing derivatives.
     sanitized_dir: Path = Path("data/private_storage/sanitized")
 
     max_file_size_mb: int = Field(
@@ -194,16 +169,10 @@ class Settings(BaseSettings):
         gt=0,
     )
 
-    # --------------------------------------------------------
     # Vector database
-    # --------------------------------------------------------
-
     chroma_path: Path = Path("data/chroma")
 
-    # --------------------------------------------------------
     # Logging
-    # --------------------------------------------------------
-
     log_level: Literal[
         "DEBUG",
         "INFO",
@@ -226,12 +195,53 @@ class Settings(BaseSettings):
         cls,
         value: Path,
     ) -> Path:
-        """Resolve relative storage paths against backend/."""
-
         if value.is_absolute():
             return value.resolve()
 
         return (BACKEND_DIR / value).resolve()
+
+    # --------------------------------------------------------
+    # Redis URL validation
+    # --------------------------------------------------------
+
+    @staticmethod
+    def validate_redis_url(
+        redis_url: str,
+        production: bool,
+    ) -> None:
+        try:
+            parts = urlsplit(redis_url)
+            port = parts.port
+        except ValueError as exc:
+            raise ValueError(
+                "REDIS_URL contains an invalid port or URL"
+            ) from exc
+
+        if parts.scheme not in ("redis", "rediss"):
+            raise ValueError(
+                "REDIS_URL must use redis:// or rediss://"
+            )
+
+        if not parts.hostname:
+            raise ValueError(
+                "REDIS_URL must include a hostname"
+            )
+
+        if port is not None and not (1 <= port <= 65535):
+            raise ValueError(
+                "REDIS_URL port must be between 1 and 65535"
+            )
+
+        if production:
+            if parts.scheme != "rediss":
+                raise ValueError(
+                    "Production Redis must use TLS with a rediss:// URL"
+                )
+
+            if not parts.username or not parts.password:
+                raise ValueError(
+                    "Production Redis must configure an ACL username and password"
+                )
 
     # --------------------------------------------------------
     # Environment validation
@@ -239,8 +249,6 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def validate_environment(self):
-        """Validate production, authentication and SMTP settings."""
-
         if self.app_env == "production" and self.debug:
             raise ValueError(
                 "DEBUG must be false in production"
@@ -294,6 +302,11 @@ class Settings(BaseSettings):
             raise ValueError(
                 "SMTP_USERNAME and SMTP_PASSWORD must be configured together"
             )
+
+        self.validate_redis_url(
+            self.redis_url.get_secret_value(),
+            production=self.app_env == "production",
+        )
 
         return self
 

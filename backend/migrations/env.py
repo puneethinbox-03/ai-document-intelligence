@@ -14,6 +14,7 @@ import app.models.message
 import app.models.processing_job
 import app.models.audit_event
 import app.models.usage_event
+import app.models.processing_outbox
 
 
 config = context.config

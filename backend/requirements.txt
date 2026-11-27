@@ -120,3 +120,8 @@ Mako==1.4.3
 argon2-cffi==25.1.0
 
 email-validator==2.4.0
+
+# Background Processing
+redis==8.2.0
+rq==3.0.0
+croniter==7.0.0
